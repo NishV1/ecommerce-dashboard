@@ -7,10 +7,31 @@
   pointer-events: none;
 }
 
+.nav-ul{
+  margin: 2px;
+  padding: 5px;
+  background-color: chocolate;
+}
+
 .nav-ul li{
   display: inline-block;
   padding: 10px;
 }
+
+.nav-ul li a{
+  text-decoration: none;
+  color: white;
+}
+
+footer{
+  background-color: chocolate;
+  position: absolute;
+  bottom: 0;
+  text-align: center;
+  width: 100%;
+  padding: 10px; 
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
