@@ -7,9 +7,9 @@
   pointer-events: none;
 }
 
-.nav-ul {
+.nav-ul li{
   display: inline-block;
-  padding: auto;
+  padding: 10px;
 }
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
