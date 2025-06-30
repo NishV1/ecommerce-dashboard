@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
-const SignUp = () => {
-  const [username, setUsername] = useState("");
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -16,14 +15,9 @@ const SignUp = () => {
     }
   }, [navigate]);
 
-  const collectData = async () => {
-    if (!username || !email || !password) {
+  const handleLogin = async () => {
+    if (!email || !password) {
       setError("Please fill in all fields");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
       return;
     }
 
@@ -31,9 +25,9 @@ const SignUp = () => {
     setError("");
 
     try {
-      const result = await fetch("http://localhost:5000/signup", {
+      const result = await fetch("http://localhost:5000/login", {
         method: "POST",
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({ email, password }),
         headers: {
           'Content-Type': 'application/json',
         }
@@ -45,7 +39,7 @@ const SignUp = () => {
         localStorage.setItem("user-info", JSON.stringify(data));
         navigate("/products");
       } else {
-        setError(data.error || "Registration failed");
+        setError(data.error || "Login failed");
       }
     } catch (error) {
       setError("Network error. Please try again.");
@@ -55,16 +49,9 @@ const SignUp = () => {
   };
 
   return (
-    <div className="register">
-      <h1>Sign Up</h1>
+    <div className="login">
+      <h1>Login</h1>
       {error && <div className="error-message">{error}</div>}
-      <input 
-        className="inputBox" 
-        type="text" 
-        value={username} 
-        onChange={(e) => setUsername(e.target.value)} 
-        placeholder="Enter Username" 
-      />
       <input 
         className="inputBox" 
         type="email" 
@@ -77,21 +64,21 @@ const SignUp = () => {
         type="password" 
         value={password} 
         onChange={(e) => setPassword(e.target.value)} 
-        placeholder="Enter Password (min 6 characters)" 
+        placeholder="Enter Password" 
       />
       <button 
-        className="registerButton" 
-        onClick={collectData} 
+        className="loginButton" 
+        onClick={handleLogin} 
         type="button"
         disabled={loading}
       >
-        {loading ? "Signing up..." : "Sign Up"}
+        {loading ? "Logging in..." : "Login"}
       </button>
       <p className="auth-link">
-        Already have an account? <Link to="/login">Login here</Link>
+        Don't have an account? <Link to="/signup">Sign up here</Link>
       </p>
     </div>
   );
 };
 
-export default SignUp;
+export default Login;

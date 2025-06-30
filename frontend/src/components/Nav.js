@@ -1,17 +1,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+
 const Nav = () => {
-    const user = localStorage.getItem("user-info"); // Retrieve user info from local storage
+    const user = localStorage.getItem("user-info");
+    const userData = user ? JSON.parse(user) : null;
+
     return (
         <div>
-            <ul className='nav-ul'>
-                <li><Link to="/products">Products</Link></li>
-                <li><Link to="/add">Add Products</Link></li>
-                <li><Link to="/update">Update Products</Link></li>
-                <li><Link to ="/profile">Profile</Link></li>
-                <li>{user?<Link to="/signout">Sign out</Link>:<Link to="/signup">Sign up</Link>}</li> {/*Conditional rendering based on user sign-in status*/}
-            </ul>
+            <nav className='nav-ul'>
+                <div className="nav-left">
+                    <Link to="/products" className="logo">E-Dashboard</Link>
+                </div>
+                <div className="nav-right">
+                    {userData ? (
+                        <>
+                            <li><Link to="/products">Products</Link></li>
+                            <li><Link to="/add">Add Product</Link></li>
+                            <li><Link to="/profile">Profile ({userData.username})</Link></li>
+                            <li><Link to="/signout">Logout</Link></li>
+                        </>
+                    ) : (
+                        <>
+                            <li><Link to="/products">Products</Link></li>
+                            <li><Link to="/login">Login</Link></li>
+                            <li><Link to="/signup">Sign Up</Link></li>
+                        </>
+                    )}
+                </div>
+            </nav>
         </div>
     )
 }
+
 export default Nav;
