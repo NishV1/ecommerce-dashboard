@@ -1,30 +1,70 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ProductFilter from "./ProductFilter";
+import Pagination from "./Pagination";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [searchKey, setSearchKey] = useState("");
+  const [pagination, setPagination] = useState({});
+  const [activeFilters, setActiveFilters] = useState({});
 
   useEffect(() => {
-    getProducts();
+    handleFilterChange({});
   }, []);
 
-  const getProducts = async () => {
+  const getProducts = async (filters = {}) => {
+    setLoading(true);
+    setError("");
+    
     try {
-      let result = await fetch("http://localhost:5000/products");
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+      
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value && value !== 'all' && value !== '') {
+          queryParams.append(key, value);
+        }
+      });
+
+      const url = Object.keys(filters).length > 0 || queryParams.toString()
+        ? `http://localhost:5000/products/filter?${queryParams.toString()}`
+        : "http://localhost:5000/products";
+
+      let result = await fetch(url);
+      
       if (result.ok) {
         result = await result.json();
-        setProducts(result);
+        
+        // Handle both old and new API response formats
+        if (result.products) {
+          // New filtered API response
+          setProducts(result.products);
+          setPagination(result.pagination || {});
+        } else {
+          // Old simple API response
+          setProducts(result);
+          setPagination({});
+        }
       } else {
         setError("Failed to fetch products");
       }
     } catch (error) {
       setError("Network error");
+      console.error("Fetch products error:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilterChange = (filters) => {
+    setActiveFilters(filters);
+    getProducts({ ...filters, page: 1 }); // Reset to page 1 when filters change
+  };
+
+  const handlePageChange = (page) => {
+    getProducts({ ...activeFilters, page });
   };
 
   const deleteProduct = async (id) => {
@@ -44,7 +84,7 @@ const ProductList = () => {
         });
 
         if (result.ok) {
-          getProducts(); // Refresh the list
+          handleFilterChange(activeFilters); // Refresh with current filters
         } else {
           const data = await result.json();
           setError(data.error || "Failed to delete product");
@@ -55,25 +95,19 @@ const ProductList = () => {
     }
   };
 
-  const searchHandle = async () => {
-    if (searchKey) {
-      try {
-        let result = await fetch(`http://localhost:5000/search/${searchKey}`);
-        if (result.ok) {
-          result = await result.json();
-          setProducts(result);
-        }
-      } catch (error) {
-        setError("Search failed");
-      }
-    } else {
-      getProducts();
-    }
-  };
-
   const getCurrentUser = () => {
     const user = localStorage.getItem("user-info");
     return user ? JSON.parse(user) : null;
+  };
+
+  const isUserOwner = (product, user) => {
+    if (!user || !product.userId) return false;
+    
+    // Handle different userId formats (string vs ObjectId)
+    const productUserId = typeof product.userId === 'object' ? product.userId._id || product.userId.toString() : product.userId;
+    const currentUserId = user._id;
+    
+    return currentUserId === productUserId;
   };
 
   const currentUser = getCurrentUser();
@@ -87,21 +121,21 @@ const ProductList = () => {
       <h3>Product Listing</h3>
       {error && <div className="error-message">{error}</div>}
       
-      <div className="search-container">
-        <input
-          type="text"
-          className="search-box"
-          placeholder="Search Products"
-          value={searchKey}
-          onChange={(e) => setSearchKey(e.target.value)}
-        />
-        <button onClick={searchHandle} className="search-btn">
-          Search
-        </button>
-        <button onClick={getProducts} className="search-btn">
-          Show All
-        </button>
-      </div>
+      {/* Enhanced Filter Component */}
+      <ProductFilter 
+        onFilterChange={handleFilterChange}
+        initialFilters={activeFilters}
+      />
+
+      {/* Results Summary */}
+      {pagination.totalProducts !== undefined && (
+        <div className="results-summary">
+          Showing {products.length} of {pagination.totalProducts} products
+          {pagination.totalPages > 1 && (
+            <span> (Page {pagination.currentPage} of {pagination.totalPages})</span>
+          )}
+        </div>
+      )}
 
       {products.length > 0 ? (
         <ul className="products-grid">
@@ -111,6 +145,7 @@ const ProductList = () => {
             <h5>Price</h5>
             <h5>Brand</h5>
             <h5>Category</h5>
+            <h5>Views</h5>
             <h5>Operations</h5>
           </li>
           {products.map((item, index) => (
@@ -120,8 +155,9 @@ const ProductList = () => {
               <span>${item.price}</span>
               <span>{item.brand}</span>
               <span>{item.category}</span>
+              <span className="view-count">👁 {item.views || 0}</span>
               <span className="operations">
-                {currentUser && currentUser._id === item.userId && (
+                {isUserOwner(item, currentUser) && (
                   <>
                     <button 
                       onClick={() => deleteProduct(item._id)}
@@ -144,6 +180,12 @@ const ProductList = () => {
       ) : (
         <h1>No Products found</h1>
       )}
+
+      {/* Pagination */}
+      <Pagination
+        pagination={pagination}
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 };

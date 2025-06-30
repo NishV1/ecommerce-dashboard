@@ -36,6 +36,10 @@ const productSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'users',
         required: true
+    },
+    views: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true

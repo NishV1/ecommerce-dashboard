@@ -43,6 +43,8 @@ const SignUp = () => {
 
       if (result.ok) {
         localStorage.setItem("user-info", JSON.stringify(data));
+        // Trigger navigation update
+        window.dispatchEvent(new Event('userDataChanged'));
         navigate("/products");
       } else {
         setError(data.error || "Registration failed");

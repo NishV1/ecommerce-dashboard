@@ -6,6 +6,8 @@ const Signout = () => {
 
   useEffect(() => {
     localStorage.removeItem("user-info");
+    // Trigger navigation update
+    window.dispatchEvent(new Event('userDataChanged'));
     navigate("/signup");
   }, [navigate]);
 
